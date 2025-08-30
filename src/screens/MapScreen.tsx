@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Platform, PermissionsAndroid, Alert, Pressable, Image, TouchableHighlight, TouchableOpacity } from 'react-native';
+import PermissionsService from '../services/permissions';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
@@ -128,13 +129,26 @@ export default function MapScreen() {
     setNearby(filtered);
   };
 
-  const sendRequest = async (otherUid: string) => {
-    console.log('[Map] sendRequest:start', otherUid);
-    const me = auth().currentUser;
-    if (!me) return;
-    const myRef = firestore().collection('connections').doc(otherUid).collection('friends').doc(me.uid);
-    await myRef.set({ status: 'pending', createdAt: firestore.FieldValue.serverTimestamp() });
-    console.log('[Map] sendRequest:done');
+  const sendFriendRequest = async (otherUid: string) => {
+    console.log('[Map] sendFriendRequest:start', otherUid);
+    const success = await PermissionsService.sendFriendRequest(otherUid);
+    if (success) {
+      Alert.alert('Success', 'Friend request sent successfully!');
+    } else {
+      Alert.alert('Error', 'Failed to send friend request. Please try again.');
+    }
+    console.log('[Map] sendFriendRequest:done');
+  };
+
+  const sendTrackerRequest = async (otherUid: string) => {
+    console.log('[Map] sendTrackerRequest:start', otherUid);
+    const success = await PermissionsService.sendTrackerRequest(otherUid);
+    if (success) {
+      Alert.alert('Success', 'Tracker request sent successfully!');
+    } else {
+      Alert.alert('Error', 'Failed to send tracker request. Please try again.');
+    }
+    console.log('[Map] sendTrackerRequest:done');
   };
 
   const onMapReady = () => {
@@ -167,12 +181,24 @@ export default function MapScreen() {
             return null;
           }
           
+          // Get user category and permissions
+          const userCategory = PermissionsService.getUserCategory(u.id);
+          const permissions = PermissionsService.getPermissions(u.id);
+          
+          // Only show location if user has permission to see it
+          if (!permissions.canSeeLocation) {
+            return null;
+          }
+          
+          // Filter user data based on permissions
+          const filteredData = PermissionsService.getFilteredUserData(u, u.id);
+          
           return (
             <Marker
               key={u.id}
               coordinate={{ latitude: u.location.latitude, longitude: u.location.longitude }}
-              title={`${u.vehicleName || 'Vehicle'}`}
-              description={`${u.driverName || ''} • ${(u.distance / 1000).toFixed(1)} km`}
+              title={`${filteredData.vehicleName || 'Vehicle'}`}
+              description={`${filteredData.driverName || ''} • ${(u.distance / 1000).toFixed(1)} km`}
             />
           );
         })}
@@ -239,17 +265,86 @@ export default function MapScreen() {
           <FlatList
             data={nearby}
             keyExtractor={(i) => i.id}
-            renderItem={({ item }) => (
-              <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderColor: '#F3F4F6' }}>
-                <Text style={{ fontWeight: '700', color: '#111827' }}>{item.vehicleName || 'Vehicle'} <Text style={{ fontWeight: '400', color: '#6B7280' }}>— {item.driverName || ''}</Text></Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-                  <Text style={{ color: '#6B7280' }}>{(item.distance/1000).toFixed(2)} km away</Text>
-                  <TouchableOpacity onPress={() => sendRequest(item.id)} style={{ backgroundColor: '#111827', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}>
-                    <Text style={{ color: 'white', fontWeight: '700' }}>Send Request</Text>
-                  </TouchableOpacity>
+            renderItem={({ item }) => {
+              // Get user category and permissions
+              const userCategory = PermissionsService.getUserCategory(item.id);
+              const permissions = PermissionsService.getPermissions(item.id);
+              
+              // Filter user data based on permissions
+              const filteredData = PermissionsService.getFilteredUserData(item, item.id);
+              
+              return (
+                <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderColor: '#F3F4F6' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: '700', color: '#111827' }}>
+                        {filteredData.vehicleName || 'Vehicle'}
+                        {filteredData.driverName && (
+                          <Text style={{ fontWeight: '400', color: '#6B7280' }}> — {filteredData.driverName}</Text>
+                        )}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                        <Text style={{ color: '#6B7280' }}>{(item.distance/1000).toFixed(2)} km away</Text>
+                        <View style={{ 
+                          backgroundColor: userCategory === 'stranger' ? '#E5E7EB' : userCategory === 'friend' ? '#10B981' : '#8B5CF6',
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 8,
+                          marginLeft: 8
+                        }}>
+                          <Text style={{ 
+                            color: userCategory === 'stranger' ? '#6B7280' : 'white',
+                            fontSize: 10,
+                            fontWeight: '700'
+                          }}>
+                            {userCategory.toUpperCase()}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      {userCategory === 'stranger' && (
+                        <TouchableOpacity 
+                          onPress={() => sendFriendRequest(item.id)} 
+                          style={{ backgroundColor: '#2563EB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
+                        >
+                          <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Add Friend</Text>
+                        </TouchableOpacity>
+                      )}
+                      
+                      {userCategory === 'friend' && !PermissionsService.hasPendingTrackerRequest(item.id) && (
+                        <TouchableOpacity 
+                          onPress={() => sendTrackerRequest(item.id)} 
+                          style={{ backgroundColor: '#8B5CF6', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
+                        >
+                          <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Trust</Text>
+                        </TouchableOpacity>
+                      )}
+                      
+                      {userCategory === 'friend' && PermissionsService.hasPendingTrackerRequest(item.id) && (
+                        <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}>
+                          <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Pending</Text>
+                        </View>
+                      )}
+                      
+                      {userCategory === 'tracker' && (
+                        <TouchableOpacity 
+                          onPress={() => navigation.navigate('Chat', { 
+                            friendUid: item.id,
+                            friendName: filteredData.driverName || filteredData.vehicleName || 'Friend',
+                            friendPhoto: filteredData.photoURL,
+                          })} 
+                          style={{ backgroundColor: '#10B981', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
+                        >
+                          <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Chat</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
                 </View>
-              </View>
-            )}
+              );
+            }}
             ListEmptyComponent={<Text style={{ color: '#6B7280' }}>No vehicles found</Text>}
           />
           <View style={{ marginTop: 10 }}>

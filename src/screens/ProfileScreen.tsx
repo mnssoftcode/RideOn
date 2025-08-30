@@ -173,6 +173,13 @@ export default function ProfileScreen() {
           <Text style={styles.saveText}>{saving ? 'Saving...' : 'Save Changes'}</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('PrivacySettings')} 
+          style={[styles.saveBtn, { backgroundColor: '#8B5CF6', marginBottom: 12 }]}
+        >
+          <Text style={styles.saveText}>Privacy Settings</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
           <Image source={require('../assets/logout.png')} style={styles.logoutIcon} />
           <Text style={styles.logoutText}>Logout</Text>

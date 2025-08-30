@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getAuth, onAuthStateChanged, ConfirmationResult } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import PermissionsService from './permissions';
 
 export function useAuthState() {
   const [user, setUser] = useState<null | { uid: string }>(null);
@@ -13,6 +14,8 @@ export function useAuthState() {
       if (firebaseUser) {
         const doc = await firestore().collection('users').doc(firebaseUser.uid).get();
         setProfileExists(doc.exists);
+        // Initialize permissions service
+        PermissionsService.initialize(firebaseUser.uid);
       } else {
         setProfileExists(false);
       }
