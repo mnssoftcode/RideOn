@@ -1,3 +1,30 @@
+# RideOn - Phase 1
+
+Setup steps:
+
+1. Firebase setup
+   - Create a Firebase project and enable Phone Auth
+   - Create iOS and Android apps, download `GoogleService-Info.plist` and `google-services.json`
+   - Place them in `ios/` and `android/` as per RNFirebase docs
+   - In Firestore, create rules to allow authenticated read/write
+
+2. iOS
+   - `cd ios && pod install`
+   - Ensure `NSLocationWhenInUseUsageDescription`, `NSBluetoothAlwaysUsageDescription`, `NSBluetoothPeripheralUsageDescription` exist (already added)
+
+3. Android
+   - Ensure permissions in `AndroidManifest.xml` (already added)
+   - Add Google Maps API key in `android/app/src/main/AndroidManifest.xml` application meta-data if needed
+
+4. Env
+   - Add a file `src/config/firebase.ts` with your config (will scaffold)
+
+Run:
+
+```
+npm run android
+npm run ios
+```
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started

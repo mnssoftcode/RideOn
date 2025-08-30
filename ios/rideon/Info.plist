@@ -32,8 +32,16 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>RideOn uses the camera to take your profile picture.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RideOn needs photo library access to select a profile picture.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>RideOn uses your location to show nearby vehicles and friends.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>RideOn uses Bluetooth to discover nearby vehicles.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>RideOn uses Bluetooth to scan for nearby devices.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
