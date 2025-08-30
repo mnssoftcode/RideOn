@@ -199,6 +199,11 @@ export default function MapScreen() {
               coordinate={{ latitude: u.location.latitude, longitude: u.location.longitude }}
               title={`${filteredData.vehicleName || 'Vehicle'}`}
               description={`${filteredData.driverName || ''} • ${(u.distance / 1000).toFixed(1)} km`}
+              onPress={() => navigation.navigate('UserProfile', { 
+                userId: u.id,
+                userName: filteredData.driverName || filteredData.vehicleName || 'User',
+                userPhoto: filteredData.photoURL,
+              })}
             />
           );
         })}
@@ -314,17 +319,41 @@ export default function MapScreen() {
                       )}
                       
                       {userCategory === 'friend' && !PermissionsService.hasPendingTrackerRequest(item.id) && (
-                        <TouchableOpacity 
-                          onPress={() => sendTrackerRequest(item.id)} 
-                          style={{ backgroundColor: '#8B5CF6', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
-                        >
-                          <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Trust</Text>
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TouchableOpacity 
+                            onPress={() => navigation.navigate('Chat', { 
+                              friendUid: item.id,
+                              friendName: filteredData.driverName || filteredData.vehicleName || 'Friend',
+                              friendPhoto: filteredData.photoURL,
+                            })} 
+                            style={{ backgroundColor: '#10B981', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
+                          >
+                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Chat</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            onPress={() => sendTrackerRequest(item.id)} 
+                            style={{ backgroundColor: '#8B5CF6', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
+                          >
+                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Trust</Text>
+                          </TouchableOpacity>
+                        </View>
                       )}
                       
                       {userCategory === 'friend' && PermissionsService.hasPendingTrackerRequest(item.id) && (
-                        <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}>
-                          <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Pending</Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TouchableOpacity 
+                            onPress={() => navigation.navigate('Chat', { 
+                              friendUid: item.id,
+                              friendName: filteredData.driverName || filteredData.vehicleName || 'Friend',
+                              friendPhoto: filteredData.photoURL,
+                            })} 
+                            style={{ backgroundColor: '#10B981', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}
+                          >
+                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Chat</Text>
+                          </TouchableOpacity>
+                          <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}>
+                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>Pending</Text>
+                          </View>
                         </View>
                       )}
                       

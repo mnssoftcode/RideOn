@@ -208,7 +208,7 @@ export default function FriendsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
       {/* Header */}
-      <View style={{ backgroundColor: 'white', paddingTop: 50, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
+      <View style={{ backgroundColor: 'white', paddingTop: 10, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
         <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827', marginBottom: 8 }}>Friends</Text>
         
         {/* Friends Count */}
@@ -224,7 +224,7 @@ export default function FriendsScreen() {
         </View>
 
         {/* Search Bar */}
-        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
+        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 16, borderWidth: 1, borderColor: '#E5E7EB' }}>
           <TextInput
             placeholder="Search friends..."
             value={searchQuery}
@@ -244,18 +244,25 @@ export default function FriendsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         renderItem={({ item }) => (
-          <View style={{ 
-            backgroundColor: 'white', 
-            borderRadius: 16, 
-            padding: 16, 
-            marginBottom: 12, 
-            shadowColor: '#000', 
-            shadowOpacity: 0.08, 
-            shadowRadius: 12, 
-            elevation: 3,
-            borderWidth: 1,
-            borderColor: '#F3F4F6'
-          }}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('UserProfile', { 
+              userId: item.uid,
+              userName: item.driverName || item.vehicleName || 'Friend',
+              userPhoto: item.photoURL,
+            })}
+            style={{ 
+              backgroundColor: 'white', 
+              borderRadius: 16, 
+              padding: 16, 
+              marginBottom: 12, 
+              shadowColor: '#000', 
+              shadowOpacity: 0.08, 
+              shadowRadius: 12, 
+              elevation: 3,
+              borderWidth: 1,
+              borderColor: '#F3F4F6'
+            }}
+          >
             {/* Profile Section */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
               <View style={{ 
@@ -364,7 +371,7 @@ export default function FriendsScreen() {
                 )}
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={{ alignItems: 'center', paddingTop: 40 }}>

@@ -316,7 +316,7 @@ export default function MessagesScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
       {/* Header */}
-      <View style={{ backgroundColor: 'white', paddingTop: 50, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
+      <View style={{ backgroundColor: 'white', paddingTop: 10, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827' }}>Messages</Text>
           <TouchableOpacity 
@@ -337,7 +337,7 @@ export default function MessagesScreen() {
         </Text>
 
         {/* Search Bar */}
-        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
+        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 16, borderWidth: 1, borderColor: '#E5E7EB' }}>
           <TextInput
             placeholder="Search conversations..."
             value={searchQuery}
@@ -359,6 +359,18 @@ export default function MessagesScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity 
             onPress={() => openChat(item)}
+            onLongPress={() => {
+              if (item.type === 'individual') {
+                const friendUid = item.participants?.find(uid => uid !== user?.uid);
+                if (friendUid) {
+                  navigation.navigate('UserProfile', { 
+                    userId: friendUid,
+                    userName: item.name,
+                    userPhoto: item.photoURL,
+                  });
+                }
+              }
+            }}
             style={{ 
               backgroundColor: 'white', 
               borderRadius: 16, 
