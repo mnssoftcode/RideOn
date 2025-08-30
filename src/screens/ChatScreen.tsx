@@ -3,6 +3,8 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, Image, KeyboardAvoid
 import { useRoute, useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type Message = {
   id: string;
@@ -200,9 +202,23 @@ export default function ChatScreen() {
       });
 
       setNewMessage('');
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Message Sent',
+        text2: 'Your message has been delivered',
+        position: 'top',
+        visibilityTime: 2000,
+      });
     } catch (error) {
       console.error('Error sending message:', error);
-      Alert.alert('Error', 'Failed to send message. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Send Failed',
+        text2: 'Unable to send message. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     } finally {
       setSending(false);
     }
@@ -220,8 +236,23 @@ export default function ChatScreen() {
       });
       
       setShowReactions(null);
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Reaction Added',
+        text2: 'Your reaction has been added',
+        position: 'top',
+        visibilityTime: 2000,
+      });
     } catch (error) {
       console.error('Error adding reaction:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Reaction Failed',
+        text2: 'Unable to add reaction. Please try again.',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -235,8 +266,23 @@ export default function ChatScreen() {
       await messageRef.update({
         [`reactions.${emoji}`]: firestore.FieldValue.arrayRemove(user.uid)
       });
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Reaction Removed',
+        text2: 'Your reaction has been removed',
+        position: 'top',
+        visibilityTime: 2000,
+      });
     } catch (error) {
       console.error('Error removing reaction:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Remove Failed',
+        text2: 'Unable to remove reaction. Please try again.',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -313,12 +359,12 @@ export default function ChatScreen() {
         {showDate && (
           <View style={{ alignItems: 'center', marginVertical: 16 }}>
             <View style={{
-              backgroundColor: '#E5E7EB',
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 12,
+              backgroundColor: Colors.surface,
+              paddingHorizontal: Spacing.md,
+              paddingVertical: Responsive.verticalScale(6),
+              borderRadius: BorderRadius.lg,
             }}>
-              <Text style={{ color: '#6B7280', fontSize: 12, fontWeight: '600' }}>
+              <Text style={{ color: Colors.textSecondary, fontSize: Typography.sm, fontWeight: '600' }}>
                 {formatDate(item.timestamp)}
               </Text>
             </View>
@@ -333,30 +379,26 @@ export default function ChatScreen() {
         }}>
           <View style={{
             maxWidth: '70%',
-            backgroundColor: isOwnMessage ? '#2563EB' : '#F3F4F6',
-            borderRadius: 18,
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            shadowOffset: { width: 0, height: 2 },
-            elevation: 2,
+            backgroundColor: isOwnMessage ? Colors.primary : Colors.surface,
+            borderRadius: BorderRadius.xl,
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Responsive.verticalScale(10),
+            ...Shadows.sm,
           }}>
             {!isOwnMessage && (
               <Text style={{
-                color: '#6B7280',
-                fontSize: 12,
+                color: Colors.textSecondary,
+                fontSize: Typography.sm,
                 fontWeight: '600',
-                marginBottom: 4,
+                marginBottom: Responsive.verticalScale(4),
               }}>
                 {item.senderName || 'Unknown'}
               </Text>
             )}
             
             <Text style={{
-              color: isOwnMessage ? 'white' : '#111827',
-              fontSize: 16,
+              color: isOwnMessage ? Colors.textInverse : Colors.textPrimary,
+              fontSize: Typography.lg,
               lineHeight: 20,
             }}>
               {item.text}
@@ -369,22 +411,22 @@ export default function ChatScreen() {
               marginTop: 4,
             }}>
               <Text style={{
-                color: isOwnMessage ? 'rgba(255,255,255,0.7)' : '#9CA3AF',
-                fontSize: 12,
+                color: isOwnMessage ? Colors.textInverse : Colors.textTertiary,
+                fontSize: Typography.sm,
               }}>
                 {formatTime(item.timestamp)}
               </Text>
               
               {isOwnMessage && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: Spacing.sm }}>
+                  <Text style={{ color: Colors.textInverse, fontSize: Typography.sm }}>
                     {item.read ? '✓✓' : '✓'}
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowReactions(showReactions === item.id ? null : item.id)}
-                    style={{ marginLeft: 8 }}
+                    style={{ marginLeft: Spacing.sm }}
                   >
-                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 16 }}>😊</Text>
+                    <Text style={{ color: Colors.textInverse, fontSize: Typography.lg }}>😊</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -397,15 +439,12 @@ export default function ChatScreen() {
         {showReactions === item.id && (
           <View style={{
             position: 'absolute',
-            right: isOwnMessage ? 80 : 16,
+            right: isOwnMessage ? Responsive.scale(80) : Layout.screenPadding,
             bottom: 0,
-            backgroundColor: 'white',
-            borderRadius: 12,
-            padding: 8,
-            shadowColor: '#000',
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 5,
+            backgroundColor: Colors.card,
+            borderRadius: BorderRadius.lg,
+            padding: Spacing.sm,
+            ...Shadows.lg,
             flexDirection: 'row',
           }}>
             {['👍', '❤️', '😂', '😮', '😢', '😡'].map((emoji) => (
@@ -436,22 +475,22 @@ export default function ChatScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6' }}>
-        <ActivityIndicator size="large" color="#2563EB" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+    <View style={{ flex: 1, backgroundColor: Colors.background }}>
       {/* Custom Header */}
       <View style={{
-        backgroundColor: 'white',
-        paddingTop: 10,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
+        backgroundColor: Colors.card,
+        paddingTop: Responsive.verticalScale(10),
+        paddingBottom: Spacing.lg,
+        paddingHorizontal: Layout.screenPadding,
         borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
+        borderBottomColor: Colors.border,
         flexDirection: 'row',
         alignItems: 'center',
       }}>
@@ -459,18 +498,18 @@ export default function ChatScreen() {
         <TouchableOpacity 
           onPress={() => navigation.goBack()}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: '#F3F4F6',
+            width: Responsive.scale(40),
+            height: Responsive.scale(40),
+            borderRadius: BorderRadius.full,
+            backgroundColor: Colors.surface,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 12,
+            marginRight: Spacing.md,
           }}
         >
           <Image 
             source={require('../assets/left-arrow.png')} 
-            style={{ width: 20, height: 20, tintColor: 'black', resizeMode: 'contain' }}
+            style={{ width: Responsive.scale(20), height: Responsive.scale(20), tintColor: Colors.textPrimary, resizeMode: 'contain' }}
           />
         </TouchableOpacity>
 
@@ -481,22 +520,22 @@ export default function ChatScreen() {
             Alert.alert('Profile', 'Friend profile view coming soon!');
           }}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: '#E5E7EB',
+            width: Responsive.scale(40),
+            height: Responsive.scale(40),
+            borderRadius: BorderRadius.full,
+            backgroundColor: Colors.surface,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 12,
+            marginRight: Spacing.md,
           }}
         >
           {friendPhoto ? (
             <Image 
               source={{ uri: friendPhoto }} 
-              style={{ width: 40, height: 40, borderRadius: 20 }}
+              style={{ width: Responsive.scale(40), height: Responsive.scale(40), borderRadius: BorderRadius.full }}
             />
           ) : (
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>
+            <Text style={{ fontSize: Typography.lg, fontWeight: '700', color: Colors.textSecondary }}>
               {(friendData?.driverName || friendName || 'F').charAt(0).toUpperCase()}
             </Text>
           )}
@@ -505,24 +544,24 @@ export default function ChatScreen() {
         {/* Friend Info */}
         <View style={{ flex: 1 }}>
           <Text style={{ 
-            fontSize: 16, 
+            fontSize: Typography.lg, 
             fontWeight: '700', 
-            color: '#111827',
-            marginBottom: 2,
+            color: Colors.textPrimary,
+            marginBottom: Responsive.verticalScale(2),
           }}>
             {friendData?.driverName || friendName || 'Friend'}
           </Text>
           <Text style={{ 
-            fontSize: 12, 
-            color: '#6B7280',
-            marginBottom: 1,
+            fontSize: Typography.sm, 
+            color: Colors.textSecondary,
+            marginBottom: Responsive.verticalScale(1),
           }}>
             {friendData?.vehicleName || 'Vehicle'}
           </Text>
           {friendData?.vehicleNumber && (
             <Text style={{ 
-              fontSize: 12, 
-              color: '#9CA3AF',
+              fontSize: Typography.sm, 
+              color: Colors.textTertiary,
               fontWeight: '600',
             }}>
               {friendData.vehicleNumber}

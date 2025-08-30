@@ -4,6 +4,8 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import PermissionsService, { UserCategory } from '../services/permissions';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type UserProfile = {
   uid: string;
@@ -108,13 +110,31 @@ export default function UserProfileScreen() {
     try {
       const success = await PermissionsService.sendFriendRequest(userId);
       if (success) {
-        Alert.alert('Success', 'Friend request sent successfully!');
+        Toast.show({
+          type: 'success',
+          text1: 'Friend Request Sent!',
+          text2: 'Your friend request has been sent successfully',
+          position: 'top',
+          visibilityTime: 3000,
+        });
         setHasPendingRequest(true);
       } else {
-        Alert.alert('Error', 'Failed to send friend request. Please try again.');
+        Toast.show({
+          type: 'error',
+          text1: 'Request Failed',
+          text2: 'Unable to send friend request. Please try again.',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to send friend request');
+      Toast.show({
+        type: 'error',
+        text1: 'Request Failed',
+        text2: 'Unable to send friend request. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
   };
 
@@ -124,17 +144,42 @@ export default function UserProfileScreen() {
     try {
       const success = await PermissionsService.sendTrackerRequest(userId);
       if (success) {
-        Alert.alert('Success', 'Tracker request sent successfully!');
+        Toast.show({
+          type: 'success',
+          text1: 'Tracker Request Sent!',
+          text2: 'Your tracker request has been sent successfully',
+          position: 'top',
+          visibilityTime: 3000,
+        });
         setHasPendingTrackerRequest(true);
       } else {
-        Alert.alert('Error', 'Failed to send tracker request. Please try again.');
+        Toast.show({
+          type: 'error',
+          text1: 'Request Failed',
+          text2: 'Unable to send tracker request. Please try again.',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to send tracker request');
+      Toast.show({
+        type: 'error',
+        text1: 'Request Failed',
+        text2: 'Unable to send tracker request. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
   };
 
   const openChat = () => {
+    Toast.show({
+      type: 'info',
+      text1: 'Opening Chat',
+      text2: 'Starting conversation with friend',
+      position: 'top',
+      visibilityTime: 2000,
+    });
     navigation.navigate('Chat', {
       friendUid: userId,
       friendName: userProfile?.driverName || userProfile?.vehicleName || 'Friend',
@@ -157,13 +202,31 @@ export default function UserProfileScreen() {
             try {
               const success = await PermissionsService.removeFriend(userId);
               if (success) {
-                Alert.alert('Success', 'Friend removed successfully');
+                Toast.show({
+                  type: 'success',
+                  text1: 'Friend Removed',
+                  text2: 'Friend has been removed successfully',
+                  position: 'top',
+                  visibilityTime: 3000,
+                });
                 navigation.goBack();
               } else {
-                Alert.alert('Error', 'Failed to remove friend. Please try again.');
+                Toast.show({
+                  type: 'error',
+                  text1: 'Remove Failed',
+                  text2: 'Unable to remove friend. Please try again.',
+                  position: 'top',
+                  visibilityTime: 4000,
+                });
               }
             } catch (error) {
-              Alert.alert('Error', 'Failed to remove friend');
+              Toast.show({
+                type: 'error',
+                text1: 'Remove Failed',
+                text2: 'Unable to remove friend. Please try again.',
+                position: 'top',
+                visibilityTime: 4000,
+              });
             }
           }
         }
@@ -173,12 +236,25 @@ export default function UserProfileScreen() {
 
   const goToFriend = () => {
     if (userProfile?.location) {
+      Toast.show({
+        type: 'success',
+        text1: 'Navigating to Friend',
+        text2: 'Opening map with route to friend\'s location',
+        position: 'top',
+        visibilityTime: 2000,
+      });
       navigation.navigate('Map', { 
         routeTo: userProfile.location,
         friendName: userProfile?.driverName || userProfile?.vehicleName || 'Friend'
       });
     } else {
-      Alert.alert('Location Unavailable', 'This friend\'s location is not currently available.');
+      Toast.show({
+        type: 'error',
+        text1: 'Location Unavailable',
+        text2: 'This friend\'s location is not currently available',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -188,24 +264,24 @@ export default function UserProfileScreen() {
         return {
           title: 'Stranger',
           description: 'Limited visibility - basic vehicle information only',
-          color: '#E5E7EB',
-          textColor: '#6B7280',
+          color: Colors.surface,
+          textColor: Colors.textSecondary,
           icon: '👤'
         };
       case 'friend':
         return {
           title: 'Friend',
           description: 'Trusted connection - can chat and join groups',
-          color: '#10B981',
-          textColor: 'white',
+          color: Colors.surface,
+          textColor: Colors.textPrimary,
           icon: '👥'
         };
       case 'tracker':
         return {
           title: 'Trusted Tracker',
           description: 'Maximum trust - location sharing and route tracking',
-          color: '#8B5CF6',
-          textColor: 'white',
+          color: Colors.primary,
+          textColor: Colors.textInverse,
           icon: '🔒'
         };
     }
@@ -383,11 +459,11 @@ export default function UserProfileScreen() {
                 <TouchableOpacity onPress={sendTrackerRequest} style={[styles.secondaryButton, { flex: 1 }]}>
                   <Text style={styles.secondaryButtonText}>Trust</Text>
                 </TouchableOpacity>
-              ) : (
-                <View style={[styles.secondaryButton, { flex: 1, backgroundColor: '#F59E0B' }]}>
-                  <Text style={styles.secondaryButtonText}>Pending</Text>
-                </View>
-              )}
+                          ) : (
+              <View style={[styles.secondaryButton, { flex: 1, backgroundColor: Colors.warning }]}>
+                <Text style={[styles.secondaryButtonText, { color: Colors.textPrimary }]}>Pending</Text>
+              </View>
+            )}
             </View>
             
             <View style={styles.buttonGroup}>
@@ -439,337 +515,326 @@ export default function UserProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.background,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6B7280',
+    marginTop: Spacing.lg,
+    fontSize: Typography.lg,
+    color: Colors.textSecondary,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    padding: 20,
+    backgroundColor: Colors.background,
+    padding: Spacing.xl,
   },
   errorText: {
-    fontSize: 18,
-    color: '#6B7280',
-    marginBottom: 20,
+    fontSize: Typography.xl,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
   },
   errorButton: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing['2xl'],
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
   },
   errorButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+    color: Colors.textInverse,
+    fontWeight: Typography.bold,
+    fontSize: Typography.lg,
   },
   header: {
-    backgroundColor: 'white',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    backgroundColor: Colors.background,
+    paddingTop: Responsive.verticalScale(10),
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Layout.screenPadding,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: Responsive.scale(40),
+    height: Responsive.scale(40),
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.sm,
   },
   backIcon: {
-    width: 20,
-    height: 20,
-    tintColor: '#111827',
+    width: Responsive.scale(20),
+    height: Responsive.scale(20),
+    tintColor: Colors.textPrimary,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: Typography['2xl'],
+    fontWeight: Typography.bold,
+    color: Colors.textPrimary,
   },
   profileSection: {
-    backgroundColor: 'white',
-    padding: 24,
+    backgroundColor: Colors.card,
+    padding: Spacing['2xl'],
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
+    marginHorizontal: Layout.screenPadding,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.md,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: Layout.avatarXLarge,
+    height: Layout.avatarXLarge,
+    borderRadius: BorderRadius.full,
     borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    borderColor: Colors.background,
+    ...Shadows.lg,
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#E5E7EB',
+    width: Layout.avatarXLarge,
+    height: Layout.avatarXLarge,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    borderColor: Colors.background,
+    ...Shadows.lg,
   },
   avatarText: {
-    color: '#6B7280',
-    fontWeight: '700',
-    fontSize: 48,
+    color: Colors.textSecondary,
+    fontWeight: Typography.bold,
+    fontSize: Responsive.moderateScale(48),
   },
   onlineIndicator: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    bottom: Responsive.scale(8),
+    right: Responsive.scale(8),
+    width: Responsive.scale(24),
+    height: Responsive.scale(24),
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#10B981',
+    borderColor: Colors.success,
+    ...Shadows.sm,
   },
   onlineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#10B981',
+    width: Responsive.scale(12),
+    height: Responsive.scale(12),
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.success,
   },
   userInfo: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 4,
+    fontSize: Typography['3xl'],
+    fontWeight: Typography.extrabold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(4),
   },
   vehicleName: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: Typography.lg,
+    color: Colors.textSecondary,
+    fontWeight: Typography.semibold,
+    marginBottom: Responsive.verticalScale(4),
   },
   distance: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '500',
+    fontSize: Typography.sm,
+    color: Colors.textTertiary,
+    fontWeight: Typography.medium,
   },
   categoryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     width: '100%',
+    ...Shadows.sm,
   },
   categoryIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: Responsive.moderateScale(24),
+    marginRight: Spacing.md,
   },
   categoryText: {
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 2,
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
+    marginBottom: Responsive.verticalScale(2),
   },
   categoryDescription: {
-    fontSize: 14,
+    fontSize: Typography.sm,
     opacity: 0.9,
   },
   card: {
-    backgroundColor: 'white',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    backgroundColor: Colors.card,
+    marginHorizontal: Layout.screenPadding,
+    marginBottom: Spacing.lg,
+    padding: Layout.cardPadding,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
+    fontSize: Typography.xl,
+    fontWeight: Typography.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.lg,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: Responsive.verticalScale(8),
   },
   infoLabel: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
+    fontSize: Typography.lg,
+    color: Colors.textSecondary,
+    fontWeight: Typography.medium,
   },
   infoValue: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '600',
+    fontSize: Typography.lg,
+    color: Colors.textPrimary,
+    fontWeight: Typography.semibold,
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   locationIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F0F9FF',
+    width: Responsive.scale(48),
+    height: Responsive.scale(48),
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: Spacing.lg,
   },
   locationIconText: {
-    fontSize: 20,
+    fontSize: Responsive.moderateScale(20),
   },
   locationInfo: {
     flex: 1,
   },
   locationText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
+    fontSize: Typography.lg,
+    fontWeight: Typography.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(2),
   },
   locationSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
   },
   permissionsDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 16,
-    lineHeight: 20,
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.lg,
+    lineHeight: Typography.normal * Typography.sm,
   },
   permissionsList: {
-    gap: 12,
+    gap: Spacing.md,
   },
   permissionItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   permissionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#10B981',
-    marginRight: 12,
+    width: Responsive.scale(8),
+    height: Responsive.scale(8),
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.success,
+    marginRight: Spacing.md,
   },
   permissionText: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '500',
+    fontSize: Typography.lg,
+    color: Colors.textPrimary,
+    fontWeight: Typography.medium,
   },
   actionsContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: Layout.screenPadding,
+    marginBottom: Spacing.lg,
   },
   buttonGroup: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
   primaryButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    flex: 1,
+    ...Shadows.md,
   },
   primaryButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+    color: Colors.textInverse,
+    fontWeight: Typography.bold,
+    fontSize: Typography.lg,
   },
   secondaryButton: {
-    backgroundColor: '#8B5CF6',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    shadowColor: '#8B5CF6',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.sm,
   },
   secondaryButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+    color: Colors.textPrimary,
+    fontWeight: Typography.bold,
+    fontSize: Typography.lg,
   },
   tertiaryButton: {
-    backgroundColor: '#10B981',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    shadowColor: '#10B981',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.sm,
   },
   tertiaryButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+    color: Colors.textPrimary,
+    fontWeight: Typography.bold,
+    fontSize: Typography.lg,
   },
   dangerButton: {
-    backgroundColor: '#EF4444',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: Colors.error,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    shadowColor: '#EF4444',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    flex: 1,
+    ...Shadows.md,
   },
   dangerButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+    color: Colors.textInverse,
+    fontWeight: Typography.bold,
+    fontSize: Typography.lg,
   },
   bottomSpacing: {
-    height: 32,
+    height: Responsive.verticalScale(32),
   },
 });

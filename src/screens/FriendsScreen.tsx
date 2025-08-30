@@ -3,6 +3,8 @@ import { View, Text, FlatList, TouchableOpacity, RefreshControl, TextInput, Imag
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type FriendRow = {
   uid: string;
@@ -119,13 +121,53 @@ export default function FriendsScreen() {
         friend.vehicleNumber?.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredFriends(filtered);
+      
+      // Show search results toast
+      if (searchQuery.trim().length > 2) {
+        const resultCount = filtered.length;
+        if (resultCount === 0) {
+          Toast.show({
+            type: 'info',
+            text1: 'No Results Found',
+            text2: `No friends match "${searchQuery}"`,
+            position: 'top',
+            visibilityTime: 2000,
+          });
+        } else {
+          Toast.show({
+            type: 'success',
+            text1: 'Search Results',
+            text2: `Found ${resultCount} friend${resultCount !== 1 ? 's' : ''}`,
+            position: 'top',
+            visibilityTime: 2000,
+          });
+        }
+      }
     }
   }, [searchQuery, friends, getFriendsWithDistance]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadFriends(), loadUserLocation()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([loadFriends(), loadUserLocation()]);
+      Toast.show({
+        type: 'success',
+        text1: 'Refreshed!',
+        text2: 'Friends list updated successfully',
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Refresh Failed',
+        text2: 'Unable to update friends list',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadFriends, loadUserLocation]);
 
   const accept = async (friendUid: string) => {
@@ -135,8 +177,25 @@ export default function FriendsScreen() {
         .set({ status: 'accepted', createdAt: firestore.FieldValue.serverTimestamp() }, { merge: true });
       await firestore().collection('connections').doc(friendUid).collection('friends').doc(user.uid)
         .set({ status: 'accepted', createdAt: firestore.FieldValue.serverTimestamp() }, { merge: true });
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Friend Request Accepted!',
+        text2: 'You are now connected with this user',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      
+      loadFriends(); // Refresh the list
     } catch (error) {
       console.error('Error accepting friend:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Accept Failed',
+        text2: 'Unable to accept friend request. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
   };
 
@@ -145,8 +204,25 @@ export default function FriendsScreen() {
     try {
       await firestore().collection('connections').doc(user.uid).collection('friends').doc(friendUid).delete();
       await firestore().collection('connections').doc(friendUid).collection('friends').doc(user.uid).delete();
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Friend Request Rejected',
+        text2: 'The request has been removed',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      
+      loadFriends(); // Refresh the list
     } catch (error) {
       console.error('Error rejecting friend:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Reject Failed',
+        text2: 'Unable to reject friend request. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
   };
 
@@ -206,31 +282,67 @@ export default function FriendsScreen() {
   const pendingFriendsCount = friends.filter(f => f.status === 'pending').length;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+    <View style={{ flex: 1, backgroundColor: Colors.background }}>
       {/* Header */}
-      <View style={{ backgroundColor: 'white', paddingTop: 10, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
-        <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827', marginBottom: 8 }}>Friends</Text>
+      <View style={{ 
+        backgroundColor: Colors.card, 
+        paddingTop: Responsive.verticalScale(10), 
+        paddingBottom: Spacing.lg, 
+        paddingHorizontal: Layout.screenPadding, 
+        borderBottomWidth: 1, 
+        borderBottomColor: Colors.border 
+      }}>
+        <Text style={{ 
+          fontSize: Typography['3xl'], 
+          fontWeight: '800', 
+          color: Colors.textPrimary, 
+          marginBottom: Responsive.verticalScale(8) 
+        }}>Friends</Text>
         
         {/* Friends Count */}
-        <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
-          <View style={{ backgroundColor: '#10B981', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
-            <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>{acceptedFriendsCount} Connected</Text>
+        <View style={{ flexDirection: 'row', gap: Spacing.lg, marginBottom: Spacing.lg }}>
+          <View style={{ 
+            backgroundColor: Colors.success, 
+            paddingHorizontal: Spacing.md, 
+            paddingVertical: Responsive.verticalScale(6), 
+            borderRadius: BorderRadius.full 
+          }}>
+            <Text style={{ 
+              color: Colors.textInverse, 
+              fontWeight: '700', 
+              fontSize: Typography.sm 
+            }}>{acceptedFriendsCount} Connected</Text>
           </View>
           {pendingFriendsCount > 0 && (
-            <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
-              <Text style={{ color: 'white', fontWeight: '700', fontSize: 12 }}>{pendingFriendsCount} Pending</Text>
+            <View style={{ 
+              backgroundColor: Colors.warning, 
+              paddingHorizontal: Spacing.md, 
+              paddingVertical: Responsive.verticalScale(6), 
+              borderRadius: BorderRadius.full 
+            }}>
+              <Text style={{ 
+                color: Colors.textPrimary, 
+                fontWeight: '700', 
+                fontSize: Typography.sm 
+              }}>{pendingFriendsCount} Pending</Text>
             </View>
           )}
         </View>
 
         {/* Search Bar */}
-        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 16, borderWidth: 1, borderColor: '#E5E7EB' }}>
+        <View style={{ 
+          backgroundColor: Colors.surface, 
+          borderRadius: BorderRadius.lg, 
+          paddingHorizontal: Spacing.lg, 
+          borderWidth: 1, 
+          borderColor: Colors.border 
+        }}>
           <TextInput
             placeholder="Search friends..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={{ fontSize: 16, color: '#111827' }}
-            placeholderTextColor="#9CA3AF"
+            style={{ fontSize: Typography.lg, color: Colors.textPrimary }}
+            placeholderTextColor={Colors.textTertiary}
           />
         </View>
       </View>
@@ -239,7 +351,7 @@ export default function FriendsScreen() {
       <FlatList
         data={filteredFriends}
         keyExtractor={(i) => i.uid}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: Layout.screenPadding, paddingBottom: Responsive.verticalScale(32) }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -251,55 +363,52 @@ export default function FriendsScreen() {
               userPhoto: item.photoURL,
             })}
             style={{ 
-              backgroundColor: 'white', 
-              borderRadius: 16, 
-              padding: 16, 
-              marginBottom: 12, 
-              shadowColor: '#000', 
-              shadowOpacity: 0.08, 
-              shadowRadius: 12, 
-              elevation: 3,
+              backgroundColor: Colors.card, 
+              borderRadius: BorderRadius.xl, 
+              padding: Layout.cardPadding, 
+              marginBottom: Spacing.md, 
+              ...Shadows.md,
               borderWidth: 1,
-              borderColor: '#F3F4F6'
+              borderColor: Colors.border
             }}
           >
             {/* Profile Section */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md }}>
               <View style={{ 
-                width: 50, 
-                height: 50, 
-                borderRadius: 25, 
-                backgroundColor: '#E5E7EB', 
+                width: Layout.avatarMedium, 
+                height: Layout.avatarMedium, 
+                borderRadius: BorderRadius.full, 
+                backgroundColor: Colors.surface, 
                 justifyContent: 'center', 
                 alignItems: 'center',
-                marginRight: 12
+                marginRight: Spacing.md
               }}>
                 {item.photoURL ? (
                   <Image 
                     source={{ uri: item.photoURL }} 
-                    style={{ width: 50, height: 50, borderRadius: 25 }}
+                    style={{ width: Layout.avatarMedium, height: Layout.avatarMedium, borderRadius: BorderRadius.full }}
                   />
                 ) : (
-                  <Text style={{ fontSize: 20, fontWeight: '700', color: '#6B7280' }}>
+                  <Text style={{ fontSize: Responsive.moderateScale(20), fontWeight: '700', color: Colors.textSecondary }}>
                     {(item.driverName?.charAt(0) || 'U').toUpperCase()}
                   </Text>
                 )}
               </View>
               
               <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: '800', color: '#111827', fontSize: 16 }}>
+                <Text style={{ fontWeight: '800', color: Colors.textPrimary, fontSize: Typography.lg }}>
                   {item.vehicleName || 'Vehicle'}
                 </Text>
-                <Text style={{ color: '#6B7280', marginTop: 2, fontSize: 14 }}>
+                <Text style={{ color: Colors.textSecondary, marginTop: Responsive.verticalScale(2), fontSize: Typography.base }}>
                   {item.driverName || 'Unknown Driver'}
                 </Text>
                 {item.vehicleNumber && (
-                  <Text style={{ color: '#9CA3AF', marginTop: 2, fontSize: 12, fontWeight: '600' }}>
+                  <Text style={{ color: Colors.textTertiary, marginTop: Responsive.verticalScale(2), fontSize: Typography.sm, fontWeight: '600' }}>
                     {item.vehicleNumber}
                   </Text>
                 )}
                 {item.distance && (
-                  <Text style={{ color: '#6B7280', marginTop: 2, fontSize: 12 }}>
+                  <Text style={{ color: Colors.textSecondary, marginTop: Responsive.verticalScale(2), fontSize: Typography.sm }}>
                     {(item.distance/1000).toFixed(2)} km away
                   </Text>
                 )}
@@ -309,45 +418,45 @@ export default function FriendsScreen() {
             {/* Status and Actions */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ 
-                backgroundColor: item.status === 'accepted' ? '#D1FAE5' : '#FEF3C7',
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20
+                backgroundColor: item.status === 'accepted' ? Colors.success : Colors.warning,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: Responsive.verticalScale(6),
+                borderRadius: BorderRadius.full
               }}>
                 <Text style={{ 
-                  color: item.status === 'accepted' ? '#065F46' : '#92400E', 
+                  color: item.status === 'accepted' ? Colors.textInverse : Colors.textPrimary, 
                   fontWeight: '700',
-                  fontSize: 12
+                  fontSize: Typography.sm
                 }}>
                   {item.status === 'accepted' ? 'CONNECTED' : 'PENDING'}
                 </Text>
               </View>
               
-              <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
                 {item.status === 'pending' && (
                   <>
                     <TouchableOpacity 
                       onPress={() => accept(item.uid)} 
                       style={{ 
-                        backgroundColor: '#10B981', 
-                        paddingHorizontal: 16, 
-                        paddingVertical: 8, 
-                        borderRadius: 12 
+                        backgroundColor: Colors.success, 
+                        paddingHorizontal: Spacing.lg, 
+                        paddingVertical: Responsive.verticalScale(8), 
+                        borderRadius: BorderRadius.lg 
                       }}
                     >
-                      <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Accept</Text>
+                      <Text style={{ color: Colors.textInverse, fontWeight: '700', fontSize: Typography.base }}>Accept</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
                       onPress={() => reject(item.uid)} 
                       style={{ 
-                        backgroundColor: '#EF4444', 
-                        paddingHorizontal: 16, 
-                        paddingVertical: 8, 
-                        borderRadius: 12 
+                        backgroundColor: Colors.error, 
+                        paddingHorizontal: Spacing.lg, 
+                        paddingVertical: Responsive.verticalScale(8), 
+                        borderRadius: BorderRadius.lg 
                       }}
                     >
-                      <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Reject</Text>
+                      <Text style={{ color: Colors.textInverse, fontWeight: '700', fontSize: Typography.base }}>Reject</Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -356,17 +465,17 @@ export default function FriendsScreen() {
                   <TouchableOpacity 
                     onPress={() => navigateToFriend(item)} 
                     style={{ 
-                      backgroundColor: '#2563EB', 
-                      paddingHorizontal: 16, 
-                      paddingVertical: 8, 
-                      borderRadius: 12,
+                      backgroundColor: Colors.primary, 
+                      paddingHorizontal: Spacing.lg, 
+                      paddingVertical: Responsive.verticalScale(8), 
+                      borderRadius: BorderRadius.lg,
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 6
+                      gap: Responsive.scale(6)
                     }}
                   >
-                    <Image source={require('../assets/distance.png')} style={{ width: 16, height: 16, tintColor: 'white' }} />
-                    <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Go</Text>
+                    <Image source={require('../assets/distance.png')} style={{ width: Responsive.scale(16), height: Responsive.scale(16), tintColor: Colors.textInverse }} />
+                    <Text style={{ color: Colors.textInverse, fontWeight: '700', fontSize: Typography.base }}>Go</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -374,11 +483,11 @@ export default function FriendsScreen() {
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <View style={{ alignItems: 'center', paddingTop: 40 }}>
-            <Text style={{ color: '#6B7280', fontSize: 16, textAlign: 'center' }}>
+          <View style={{ alignItems: 'center', paddingTop: Responsive.verticalScale(40) }}>
+            <Text style={{ color: Colors.textSecondary, fontSize: Typography.lg, textAlign: 'center' }}>
               {searchQuery ? 'No friends found matching your search' : 'No friends yet'}
             </Text>
-            <Text style={{ color: '#9CA3AF', fontSize: 14, textAlign: 'center', marginTop: 8 }}>
+            <Text style={{ color: Colors.textTertiary, fontSize: Typography.base, textAlign: 'center', marginTop: Spacing.sm }}>
               {searchQuery ? 'Try adjusting your search terms' : 'Find nearby vehicles on the Map tab to connect'}
             </Text>
           </View>

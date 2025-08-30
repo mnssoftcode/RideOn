@@ -8,6 +8,8 @@ import { queryNearbyVehicles, updateUserLocationOnce } from '../services/locatio
 import { useBleScan } from '../services/ble';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 // Simplified permission flow: use native APIs only to avoid crashes
 
 const DEFAULT_REGION = { latitude: 37.78825, longitude: -122.4324, latitudeDelta: 0.05, longitudeDelta: 0.05 };
@@ -122,31 +124,103 @@ export default function MapScreen() {
   const refreshNearby = async () => {
     console.log('[Map] refreshNearby:start');
     if (!region) return;
-    const items = await queryNearbyVehicles(region?.latitude, region?.longitude);
-    const me = auth().currentUser?.uid;
-    const filtered = me ? items.filter((u: any) => u.id !== me) : items;
-    console.log('[Map] refreshNearby:items', filtered?.length);
-    setNearby(filtered);
+    try {
+      const items = await queryNearbyVehicles(region?.latitude, region?.longitude);
+      const me = auth().currentUser?.uid;
+      const filtered = me ? items.filter((u: any) => u.id !== me) : items;
+      console.log('[Map] refreshNearby:items', filtered?.length);
+      setNearby(filtered);
+      
+      if (filtered && filtered.length > 0) {
+        Toast.show({
+          type: 'success',
+          text1: 'Nearby Vehicles Found',
+          text2: `Found ${filtered.length} vehicle${filtered.length !== 1 ? 's' : ''} nearby`,
+          position: 'top',
+          visibilityTime: 2000,
+        });
+      } else {
+        Toast.show({
+          type: 'info',
+          text1: 'No Vehicles Nearby',
+          text2: 'No other vehicles found in your area',
+          position: 'top',
+          visibilityTime: 2000,
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Refresh Failed',
+        text2: 'Unable to find nearby vehicles',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
   };
 
   const sendFriendRequest = async (otherUid: string) => {
     console.log('[Map] sendFriendRequest:start', otherUid);
-    const success = await PermissionsService.sendFriendRequest(otherUid);
-    if (success) {
-      Alert.alert('Success', 'Friend request sent successfully!');
-    } else {
-      Alert.alert('Error', 'Failed to send friend request. Please try again.');
+    try {
+      const success = await PermissionsService.sendFriendRequest(otherUid);
+      if (success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Friend Request Sent!',
+          text2: 'Your friend request has been sent successfully',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Request Failed',
+          text2: 'Unable to send friend request. Please try again.',
+          position: 'top',
+          visibilityTime: 4000,
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Request Failed',
+        text2: 'Unable to send friend request. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
     console.log('[Map] sendFriendRequest:done');
   };
 
   const sendTrackerRequest = async (otherUid: string) => {
     console.log('[Map] sendTrackerRequest:start', otherUid);
-    const success = await PermissionsService.sendTrackerRequest(otherUid);
-    if (success) {
-      Alert.alert('Success', 'Tracker request sent successfully!');
-    } else {
-      Alert.alert('Error', 'Failed to send tracker request. Please try again.');
+    try {
+      const success = await PermissionsService.sendTrackerRequest(otherUid);
+      if (success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Tracker Request Sent!',
+          text2: 'Your tracker request has been sent successfully',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Request Failed',
+          text2: 'Unable to send tracker request. Please try again.',
+          position: 'top',
+          visibilityTime: 4000,
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Request Failed',
+        text2: 'Unable to send tracker request. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
     console.log('[Map] sendTrackerRequest:done');
   };
@@ -161,6 +235,14 @@ export default function MapScreen() {
     setRouteTo(null);
     setRouteCoordinates([]);
     setRegion(DEFAULT_REGION);
+    
+    Toast.show({
+      type: 'info',
+      text1: 'Route Cleared',
+      text2: 'Navigation route has been cleared',
+      position: 'top',
+      visibilityTime: 2000,
+    });
   };
 
   return (

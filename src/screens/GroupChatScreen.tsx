@@ -3,6 +3,8 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, Image, KeyboardAvoid
 import { useRoute, useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type GroupMessage = {
   id: string;
@@ -121,9 +123,23 @@ export default function GroupChatScreen() {
       });
 
       setNewMessage('');
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Message Sent',
+        text2: 'Your message has been delivered to the group',
+        position: 'top',
+        visibilityTime: 2000,
+      });
     } catch (error) {
       console.error('Error sending message:', error);
-      Alert.alert('Error', 'Failed to send message. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Send Failed',
+        text2: 'Unable to send message. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     } finally {
       setSending(false);
     }
@@ -299,8 +315,8 @@ export default function GroupChatScreen() {
             {groupName}
           </Text>
           <Text style={{ 
-            fontSize: 12, 
-            color: '#6B7280',
+            fontSize: Typography.sm, 
+            color: Colors.textSecondary,
           }}>
             {members.length} members
           </Text>
@@ -310,15 +326,15 @@ export default function GroupChatScreen() {
         <TouchableOpacity 
           onPress={() => setShowGroupInfo(true)}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: '#F3F4F6',
+            width: Responsive.scale(40),
+            height: Responsive.scale(40),
+            borderRadius: BorderRadius.full,
+            backgroundColor: Colors.surface,
             justifyContent: 'center',
             alignItems: 'center',
           }}
         >
-          <Text style={{ fontSize: 18 }}>ℹ️</Text>
+          <Text style={{ fontSize: Responsive.moderateScale(18) }}>ℹ️</Text>
         </TouchableOpacity>
       </View>
 
@@ -333,13 +349,13 @@ export default function GroupChatScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingVertical: 16 }}
+          contentContainerStyle={{ paddingVertical: Spacing.lg }}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', paddingTop: 60 }}>
-              <Text style={{ color: '#6B7280', fontSize: 16, textAlign: 'center' }}>
+            <View style={{ alignItems: 'center', paddingTop: Responsive.verticalScale(60) }}>
+              <Text style={{ color: Colors.textSecondary, fontSize: Typography.lg, textAlign: 'center' }}>
                 No messages yet
               </Text>
-              <Text style={{ color: '#9CA3AF', fontSize: 14, textAlign: 'center', marginTop: 8 }}>
+              <Text style={{ color: Colors.textTertiary, fontSize: Typography.base, textAlign: 'center', marginTop: Spacing.sm }}>
                 Start the conversation!
               </Text>
             </View>
@@ -348,29 +364,29 @@ export default function GroupChatScreen() {
 
         {/* Message Input */}
         <View style={{
-          backgroundColor: 'white',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
+          backgroundColor: Colors.card,
+          paddingHorizontal: Layout.screenPadding,
+          paddingVertical: Spacing.md,
           borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
+          borderTopColor: Colors.border,
           flexDirection: 'row',
           alignItems: 'center',
         }}>
           <TextInput
             style={{
               flex: 1,
-              backgroundColor: '#F9FAFB',
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              marginRight: 8,
-              fontSize: 16,
-              color: '#111827',
+              backgroundColor: Colors.surface,
+              borderRadius: BorderRadius.full,
+              paddingHorizontal: Spacing.lg,
+              paddingVertical: Responsive.verticalScale(10),
+              marginRight: Spacing.sm,
+              fontSize: Typography.lg,
+              color: Colors.textPrimary,
               borderWidth: 1,
-              borderColor: '#E5E7EB',
+              borderColor: Colors.border,
             }}
             placeholder="Type a message..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={Colors.textTertiary}
             value={newMessage}
             onChangeText={setNewMessage}
             multiline
@@ -381,18 +397,18 @@ export default function GroupChatScreen() {
             onPress={sendMessage}
             disabled={!newMessage.trim() || sending}
             style={{
-              backgroundColor: newMessage.trim() ? '#2563EB' : '#E5E7EB',
-              borderRadius: 20,
-              width: 40,
-              height: 40,
+              backgroundColor: newMessage.trim() ? Colors.primary : Colors.surface,
+              borderRadius: BorderRadius.full,
+              width: Responsive.scale(40),
+              height: Responsive.scale(40),
               justifyContent: 'center',
               alignItems: 'center',
             }}
           >
             {sending ? (
-              <ActivityIndicator size="small" color="white" />
+              <ActivityIndicator size="small" color={Colors.textInverse} />
             ) : (
-              <Image source={require('../assets/send.png')} style={{ width: 20, height: 20, tintColor: 'white', resizeMode: 'contain' }} />
+              <Image source={require('../assets/send.png')} style={{ width: Responsive.scale(20), height: Responsive.scale(20), tintColor: Colors.textInverse, resizeMode: 'contain' }} />
             )}
           </TouchableOpacity>
         </View>
@@ -404,55 +420,55 @@ export default function GroupChatScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+        <View style={{ flex: 1, backgroundColor: Colors.background }}>
           {/* Modal Header */}
           <View style={{ 
-            backgroundColor: 'white', 
-            paddingTop: 50, 
-            paddingBottom: 16, 
-            paddingHorizontal: 16, 
+            backgroundColor: Colors.card, 
+            paddingTop: Responsive.verticalScale(10), 
+            paddingBottom: Spacing.lg, 
+            paddingHorizontal: Layout.screenPadding, 
             borderBottomWidth: 1, 
-            borderBottomColor: '#E5E7EB',
+            borderBottomColor: Colors.border,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <TouchableOpacity onPress={() => setShowGroupInfo(false)}>
-              <Text style={{ color: '#2563EB', fontSize: 16, fontWeight: '600' }}>Close</Text>
+              <Text style={{ color: Colors.primary, fontSize: Typography.lg, fontWeight: '600' }}>Close</Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>Group Info</Text>
-            <View style={{ width: 50 }} />
+            <Text style={{ fontSize: Typography.xl, fontWeight: '700', color: Colors.textPrimary }}>Group Info</Text>
+            <View style={{ width: Responsive.scale(50) }} />
           </View>
 
           {/* Modal Content */}
-          <View style={{ flex: 1, padding: 16 }}>
+          <View style={{ flex: 1, padding: Layout.screenPadding }}>
             {/* Group Details */}
-            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, marginBottom: 16 }}>
-              <View style={{ alignItems: 'center', marginBottom: 20 }}>
+            <View style={{ backgroundColor: Colors.card, borderRadius: BorderRadius.xl, padding: Layout.cardPadding, marginBottom: Spacing.lg }}>
+              <View style={{ alignItems: 'center', marginBottom: Spacing.xl }}>
                 <View style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  backgroundColor: '#8B5CF6',
+                  width: Responsive.scale(80),
+                  height: Responsive.scale(80),
+                  borderRadius: BorderRadius.full,
+                  backgroundColor: Colors.primary,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  marginBottom: 12,
+                  marginBottom: Spacing.md,
                 }}>
                   {groupPhoto ? (
                     <Image 
                       source={{ uri: groupPhoto }} 
-                      style={{ width: 80, height: 80, borderRadius: 40 }}
+                      style={{ width: Responsive.scale(80), height: Responsive.scale(80), borderRadius: BorderRadius.full }}
                     />
                   ) : (
-                    <Text style={{ fontSize: 32, fontWeight: '700', color: 'white' }}>
+                    <Text style={{ fontSize: Responsive.moderateScale(32), fontWeight: '700', color: Colors.textInverse }}>
                       G
                     </Text>
                   )}
                 </View>
-                <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827' }}>
+                <Text style={{ fontSize: Typography['3xl'], fontWeight: '800', color: Colors.textPrimary }}>
                   {groupName}
                 </Text>
-                <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
+                <Text style={{ fontSize: Typography.sm, color: Colors.textSecondary, marginTop: Responsive.verticalScale(4) }}>
                   {members.length} members
                 </Text>
               </View>
@@ -460,7 +476,7 @@ export default function GroupChatScreen() {
 
             {/* Members List */}
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
+              <Text style={{ fontSize: Typography.xl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.lg }}>
                 Members ({members.length})
               </Text>
               
@@ -471,37 +487,37 @@ export default function GroupChatScreen() {
                   <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    padding: 12,
-                    backgroundColor: 'white',
-                    borderRadius: 12,
-                    marginBottom: 8,
+                    padding: Spacing.md,
+                    backgroundColor: Colors.card,
+                    borderRadius: BorderRadius.lg,
+                    marginBottom: Spacing.sm,
                   }}>
                     <View style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      backgroundColor: '#E5E7EB',
+                      width: Layout.avatarSmall,
+                      height: Layout.avatarSmall,
+                      borderRadius: BorderRadius.full,
+                      backgroundColor: Colors.surface,
                       justifyContent: 'center',
                       alignItems: 'center',
-                      marginRight: 12,
+                      marginRight: Spacing.md,
                     }}>
                       {item.photoURL ? (
                         <Image 
                           source={{ uri: item.photoURL }} 
-                          style={{ width: 40, height: 40, borderRadius: 20 }}
+                          style={{ width: Layout.avatarSmall, height: Layout.avatarSmall, borderRadius: BorderRadius.full }}
                         />
                       ) : (
-                        <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>
+                        <Text style={{ fontSize: Typography.lg, fontWeight: '700', color: Colors.textSecondary }}>
                           {(item.name?.charAt(0) || 'U').toUpperCase()}
                         </Text>
                       )}
                     </View>
                     
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>
+                      <Text style={{ fontSize: Typography.lg, fontWeight: '600', color: Colors.textPrimary }}>
                         {item.name}
                       </Text>
-                      <Text style={{ fontSize: 12, color: '#6B7280' }}>
+                      <Text style={{ fontSize: Typography.sm, color: Colors.textSecondary }}>
                         {item.role === 'admin' ? 'Admin' : 'Member'}
                       </Text>
                     </View>

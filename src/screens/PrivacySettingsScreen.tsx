@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import PermissionsService, { UserCategory } from '../services/permissions';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type PrivacySettings = {
   shareMobileNumber: boolean;
@@ -62,23 +63,42 @@ export default function PrivacySettingsScreen() {
         privacySettings: newSettings,
       });
 
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Setting Updated',
+        text2: `${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} updated successfully`,
+        position: 'top',
+        visibilityTime: 2000,
+      });
+
       // Show confirmation for important changes
       if (key === 'shareMobileNumber' && value) {
-        Alert.alert(
-          'Mobile Number Sharing',
-          'Your mobile number will now be visible to trusted trackers. You can change this anytime.',
-          [{ text: 'OK' }]
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Mobile Number Sharing',
+          text2: 'Your mobile number will now be visible to trusted trackers',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       } else if (key === 'allowSOSAlerts' && value) {
-        Alert.alert(
-          'SOS Alerts Enabled',
-          'You will now receive SOS alerts from your trusted trackers in emergency situations.',
-          [{ text: 'OK' }]
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'SOS Alerts Enabled',
+          text2: 'You will now receive emergency alerts from trusted trackers',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     } catch (error) {
       console.error('Error updating privacy setting:', error);
-      Alert.alert('Error', 'Failed to update setting. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Update Failed',
+        text2: 'Unable to update setting. Please try again.',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       
       // Revert the change
       setSettings({ ...settings });
@@ -287,28 +307,28 @@ export default function PrivacySettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.background,
   },
   header: {
-    backgroundColor: 'white',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    backgroundColor: Colors.card,
+    paddingTop: Responsive.verticalScale(10),
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Layout.screenPadding,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   backIcon: {
-    width: 24,
-    height: 24,
-    tintColor: '#111827',
+    width: Responsive.scale(24),
+    height: Responsive.scale(24),
+    tintColor: Colors.textPrimary,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: Typography['2xl'],
     fontWeight: '700',
-    color: '#111827',
+    color: Colors.textPrimary,
   },
   loadingContainer: {
     flex: 1,
@@ -316,62 +336,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: Typography.lg,
+    color: Colors.textSecondary,
   },
   section: {
-    backgroundColor: 'white',
-    marginTop: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    backgroundColor: Colors.card,
+    marginTop: Spacing.lg,
+    paddingHorizontal: Layout.screenPadding,
+    paddingVertical: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: Typography.xl,
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(8),
   },
   sectionDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
     lineHeight: 20,
   },
   categorySection: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
+    padding: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
   },
   categoryIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: Responsive.moderateScale(24),
+    marginRight: Spacing.md,
   },
   categoryInfo: {
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 16,
+    fontSize: Typography.lg,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(4),
   },
   categoryDescription: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
     lineHeight: 18,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: Colors.border,
   },
   settingContent: {
     flexDirection: 'row',
@@ -379,39 +399,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingIcon: {
-    fontSize: 20,
-    marginRight: 12,
+    fontSize: Responsive.moderateScale(20),
+    marginRight: Spacing.md,
   },
   settingText: {
     flex: 1,
   },
   settingTitle: {
-    fontSize: 16,
+    fontSize: Typography.lg,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(4),
   },
   settingDescription: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
     lineHeight: 18,
   },
   infoSection: {
-    backgroundColor: 'white',
-    marginTop: 16,
-    marginBottom: 32,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    backgroundColor: Colors.card,
+    marginTop: Spacing.lg,
+    marginBottom: Responsive.verticalScale(32),
+    paddingHorizontal: Layout.screenPadding,
+    paddingVertical: Spacing.xl,
   },
   infoTitle: {
-    fontSize: 16,
+    fontSize: Typography.lg,
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
   infoText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
     lineHeight: 20,
   },
 });

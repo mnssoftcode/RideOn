@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, Tex
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type UserDoc = {
   phone?: string;
@@ -34,6 +36,13 @@ export default function ProfileScreen() {
   const onLogout = async () => {
     try {
       await auth().signOut();
+      Toast.show({
+        type: 'success',
+        text1: 'Logged Out',
+        text2: 'You have been successfully logged out',
+        position: 'top',
+        visibilityTime: 2000,
+      });
     } finally {
       navigation.reset({ index: 0, routes: [{ name: 'Splash' }] });
     }
@@ -43,7 +52,13 @@ export default function ProfileScreen() {
     const uid = auth().currentUser?.uid;
     if (!uid) return;
     if (!data?.driverName || !data?.vehicleName || !data?.vehicleNumber) {
-      Alert.alert('Please fill all fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Information',
+        text2: 'Please fill all required fields',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
     setSaving(true);
@@ -53,9 +68,22 @@ export default function ProfileScreen() {
         vehicleName: data.vehicleName,
         vehicleNumber: data.vehicleNumber,
       }, { merge: true });
-      Alert.alert('Saved');
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Profile Updated!',
+        text2: 'Your profile has been saved successfully',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     } catch (e: any) {
-      Alert.alert('Failed to save', e?.message || '');
+      Toast.show({
+        type: 'error',
+        text1: 'Save Failed',
+        text2: e?.message || 'Unable to save profile. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     } finally {
       setSaving(false);
     }
@@ -73,9 +101,24 @@ export default function ProfileScreen() {
             // Optionally remove connections root doc (subcollections remain unless you set up a Cloud Function)
             await firestore().collection('connections').doc(user.uid).delete().catch(() => {});
             await user.delete();
+            
+            Toast.show({
+              type: 'success',
+              text1: 'Account Deleted',
+              text2: 'Your account has been permanently removed',
+              position: 'top',
+              visibilityTime: 3000,
+            });
+            
             navigation.reset({ index: 0, routes: [{ name: 'Splash' }] });
           } catch (e: any) {
-            Alert.alert('Delete failed', e?.message || 'You may need to re-login to delete.');
+            Toast.show({
+              type: 'error',
+              text1: 'Delete Failed',
+              text2: e?.message || 'You may need to re-login to delete.',
+              position: 'top',
+              visibilityTime: 4000,
+            });
           }
         } },
     ]);
@@ -175,9 +218,9 @@ export default function ProfileScreen() {
 
         <TouchableOpacity 
           onPress={() => navigation.navigate('PrivacySettings')} 
-          style={[styles.saveBtn, { backgroundColor: '#8B5CF6', marginBottom: 12 }]}
+          style={[styles.saveBtn, { backgroundColor: Colors.surface, marginBottom: Spacing.md }]}
         >
-          <Text style={styles.saveText}>Privacy Settings</Text>
+          <Text style={[styles.saveText, { color: Colors.textPrimary }]}>Privacy Settings</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
@@ -199,196 +242,174 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 16,
+    backgroundColor: Colors.background,
+    paddingHorizontal: Layout.screenPadding,
   },
   containerCenter: { 
     flex: 1, 
     alignItems: 'center', 
     justifyContent: 'center', 
-    backgroundColor: '#F3F4F6' 
+    backgroundColor: Colors.background 
   },
   header: {
-    paddingTop: 10,
-    paddingBottom: 24,
+    paddingTop: Responsive.verticalScale(10),
+    paddingBottom: Spacing['2xl'],
     alignItems: 'center',
   },
   title: { 
-    fontSize: 28, 
+    fontSize: Typography['4xl'], 
     fontWeight: '800', 
-    color: '#111827',
-    marginBottom: 4,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(4),
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: Typography.lg,
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   profileSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing['2xl'],
   },
   avatarContainer: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   avatar: { 
-    width: 100, 
-    height: 100, 
-    borderRadius: 50,
+    width: Layout.avatarLarge, 
+    height: Layout.avatarLarge, 
+    borderRadius: BorderRadius.full,
     borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    borderColor: Colors.background,
+    ...Shadows.lg,
   },
   avatarPlaceholder: { 
-    width: 100, 
-    height: 100, 
-    borderRadius: 50,
-    backgroundColor: '#E5E7EB',
+    width: Layout.avatarLarge, 
+    height: Layout.avatarLarge, 
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
     alignItems: 'center', 
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    borderColor: Colors.background,
+    ...Shadows.lg,
   },
   avatarText: { 
-    color: '#6B7280', 
+    color: Colors.textSecondary, 
     fontWeight: '700',
-    fontSize: 32,
+    fontSize: Responsive.moderateScale(32),
   },
   userName: {
-    fontSize: 20,
+    fontSize: Typography['2xl'],
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.verticalScale(4),
   },
   userPhone: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: Typography.lg,
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.xl,
+    padding: Layout.cardPadding,
+    marginBottom: Spacing.lg,
+    ...Shadows.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: Typography.xl,
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 20,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xl,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   inputLabel: { 
-    color: '#374151', 
+    color: Colors.textPrimary, 
     fontWeight: '600', 
-    marginBottom: 8,
-    fontSize: 14,
+    marginBottom: Responsive.verticalScale(8),
+    fontSize: Typography.sm,
   },
   input: { 
     borderWidth: 1, 
-    borderColor: '#E5E7EB', 
-    backgroundColor: '#F9FAFB', 
-    borderRadius: 12, 
-    paddingHorizontal: 16, 
-    paddingVertical: 14, 
-    color: '#111827',
-    fontSize: 16,
+    borderColor: Colors.border, 
+    backgroundColor: Colors.surface, 
+    borderRadius: BorderRadius.lg, 
+    paddingHorizontal: Spacing.lg, 
+    paddingVertical: Responsive.verticalScale(14), 
+    color: Colors.textPrimary,
+    fontSize: Typography.lg,
   },
   readOnlyInput: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Responsive.verticalScale(14),
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.border,
   },
   readOnlyText: {
-    color: '#6B7280',
-    fontSize: 16,
+    color: Colors.textSecondary,
+    fontSize: Typography.lg,
     fontWeight: '500',
   },
   actionsContainer: {
-    marginTop: 8,
+    marginTop: Responsive.verticalScale(8),
   },
   saveBtn: { 
-    backgroundColor: '#2563EB', 
-    paddingVertical: 16, 
-    borderRadius: 12, 
+    backgroundColor: Colors.primary, 
+    paddingVertical: Spacing.lg, 
+    borderRadius: BorderRadius.lg, 
     alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    marginBottom: Spacing.md,
+    ...Shadows.md,
   },
   saveBtnDisabled: {
     opacity: 0.6,
   },
   saveText: { 
-    color: 'white', 
+    color: Colors.textInverse, 
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: Typography.lg,
   },
   logoutBtn: { 
-    backgroundColor: '#EF4444', 
-    paddingVertical: 16, 
-    borderRadius: 12, 
+    backgroundColor: Colors.error, 
+    paddingVertical: Spacing.lg, 
+    borderRadius: BorderRadius.lg, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'center',
-    marginBottom: 12,
-    shadowColor: '#EF4444',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    marginBottom: Spacing.md,
+    ...Shadows.md,
   },
   logoutIcon: {
-    width: 20, 
-    height: 20, 
-    tintColor: 'white', 
-    marginRight: 8,
+    width: Responsive.scale(20), 
+    height: Responsive.scale(20), 
+    tintColor: Colors.textInverse, 
+    marginRight: Spacing.sm,
   },
   logoutText: { 
-    color: 'white', 
+    color: Colors.textInverse, 
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: Typography.lg,
   },
   deleteBtn: { 
-    backgroundColor: '#111827', 
-    paddingVertical: 16, 
-    borderRadius: 12, 
+    backgroundColor: Colors.textPrimary, 
+    paddingVertical: Spacing.lg, 
+    borderRadius: BorderRadius.lg, 
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    ...Shadows.md,
   },
   deleteText: { 
-    color: 'white', 
+    color: Colors.textInverse, 
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: Typography.lg,
   },
   bottomSpacing: {
-    height: 32,
+    height: Responsive.verticalScale(32),
   },
 });
 

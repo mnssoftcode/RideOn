@@ -3,6 +3,8 @@ import { View, Text, FlatList, TouchableOpacity, RefreshControl, Image, TextInpu
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import Toast from 'react-native-toast-message';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout, CommonStyles, Responsive } from '../design/DesignSystem';
 
 type ChatItem = {
   id: string;
@@ -200,13 +202,53 @@ export default function MessagesScreen() {
         chat.lastMessage?.text.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredChats(filtered);
+      
+      // Show search results toast
+      if (searchQuery.trim().length > 2) {
+        const resultCount = filtered.length;
+        if (resultCount === 0) {
+          Toast.show({
+            type: 'info',
+            text1: 'No Results Found',
+            text2: `No conversations match "${searchQuery}"`,
+            position: 'top',
+            visibilityTime: 2000,
+          });
+        } else {
+          Toast.show({
+            type: 'success',
+            text1: 'Search Results',
+            text2: `Found ${resultCount} conversation${resultCount !== 1 ? 's' : ''}`,
+            position: 'top',
+            visibilityTime: 2000,
+          });
+        }
+      }
     }
   }, [searchQuery, chats]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadChats(), loadAvailableFriends()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([loadChats(), loadAvailableFriends()]);
+      Toast.show({
+        type: 'success',
+        text1: 'Refreshed!',
+        text2: 'Messages updated successfully',
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Refresh Failed',
+        text2: 'Unable to update messages',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadChats, loadAvailableFriends]);
 
   const openChat = (chat: ChatItem) => {
@@ -264,10 +306,22 @@ export default function MessagesScreen() {
       // Refresh chats
       await loadChats();
       
-      Alert.alert('Success', 'Group created successfully!');
+      Toast.show({
+        type: 'success',
+        text1: 'Group Created!',
+        text2: `"${groupName.trim()}" group created successfully`,
+        position: 'top',
+        visibilityTime: 3000,
+      });
     } catch (error) {
       console.error('Error creating group:', error);
-      Alert.alert('Error', 'Failed to create group. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Group Creation Failed',
+        text2: 'Unable to create group. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
   };
 
@@ -314,36 +368,49 @@ export default function MessagesScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+    <View style={{ flex: 1, backgroundColor: Colors.background }}>
       {/* Header */}
-      <View style={{ backgroundColor: 'white', paddingTop: 10, paddingBottom: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827' }}>Messages</Text>
+      <View style={{ 
+        backgroundColor: Colors.card, 
+        paddingTop: Responsive.verticalScale(10), 
+        paddingBottom: Spacing.lg, 
+        paddingHorizontal: Layout.screenPadding, 
+        borderBottomWidth: 1, 
+        borderBottomColor: Colors.border 
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md }}>
+          <Text style={{ fontSize: Typography['3xl'], fontWeight: '800', color: Colors.textPrimary }}>Messages</Text>
           <TouchableOpacity 
             onPress={() => setShowCreateGroup(true)}
             style={{
-              backgroundColor: '#2563EB',
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
+              backgroundColor: Colors.primary,
+              paddingHorizontal: Spacing.lg,
+              paddingVertical: Responsive.verticalScale(8),
+              borderRadius: BorderRadius.full,
             }}
           >
-            <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>New Group</Text>
+            <Text style={{ color: Colors.textInverse, fontWeight: '700', fontSize: Typography.base }}>New Group</Text>
           </TouchableOpacity>
         </View>
         
-        <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 16 }}>
+        <Text style={{ fontSize: Typography.sm, color: Colors.textSecondary, marginBottom: Spacing.lg }}>
           {filteredChats.length} conversation{filteredChats.length !== 1 ? 's' : ''}
         </Text>
 
         {/* Search Bar */}
-        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 16, borderWidth: 1, borderColor: '#E5E7EB' }}>
+        <View style={{ 
+          backgroundColor: Colors.surface, 
+          borderRadius: BorderRadius.lg, 
+          paddingHorizontal: Spacing.lg, 
+          borderWidth: 1, 
+          borderColor: Colors.border 
+        }}>
           <TextInput
             placeholder="Search conversations..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={{ fontSize: 16, color: '#111827' }}
-            placeholderTextColor="#9CA3AF"
+            style={{ fontSize: Typography.lg, color: Colors.textPrimary }}
+            placeholderTextColor={Colors.textTertiary}
           />
         </View>
       </View>
@@ -352,7 +419,7 @@ export default function MessagesScreen() {
       <FlatList
         data={filteredChats}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: Layout.screenPadding }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -372,37 +439,34 @@ export default function MessagesScreen() {
               }
             }}
             style={{ 
-              backgroundColor: 'white', 
-              borderRadius: 16, 
-              padding: 16, 
-              marginBottom: 12, 
-              shadowColor: '#000', 
-              shadowOpacity: 0.08, 
-              shadowRadius: 12, 
-              elevation: 3,
+              backgroundColor: Colors.card, 
+              borderRadius: BorderRadius.xl, 
+              padding: Layout.cardPadding, 
+              marginBottom: Spacing.md, 
+              ...Shadows.md,
               borderWidth: 1,
-              borderColor: '#F3F4F6'
+              borderColor: Colors.border
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {/* Profile Photo */}
               <View style={{ 
-                width: 50, 
-                height: 50, 
-                borderRadius: 25, 
-                backgroundColor: '#E5E7EB', 
+                width: Layout.avatarMedium, 
+                height: Layout.avatarMedium, 
+                borderRadius: BorderRadius.full, 
+                backgroundColor: Colors.surface, 
                 justifyContent: 'center', 
                 alignItems: 'center',
-                marginRight: 12,
+                marginRight: Spacing.md,
                 position: 'relative'
               }}>
                 {item.photoURL ? (
                   <Image 
                     source={{ uri: item.photoURL }} 
-                    style={{ width: 50, height: 50, borderRadius: 25 }}
+                    style={{ width: Layout.avatarMedium, height: Layout.avatarMedium, borderRadius: BorderRadius.full }}
                   />
                 ) : (
-                  <Text style={{ fontSize: 18, fontWeight: '700', color: '#6B7280' }}>
+                  <Text style={{ fontSize: Responsive.moderateScale(18), fontWeight: '700', color: Colors.textSecondary }}>
                     {item.isGroup ? 'G' : (item.name?.charAt(0) || 'U').toUpperCase()}
                   </Text>
                 )}
@@ -411,14 +475,14 @@ export default function MessagesScreen() {
                 {!item.isGroup && (
                   <View style={{ 
                     position: 'absolute', 
-                    bottom: 2, 
-                    right: 2, 
-                    width: 12, 
-                    height: 12, 
-                    borderRadius: 6, 
-                    backgroundColor: '#10B981',
+                    bottom: Responsive.verticalScale(2), 
+                    right: Responsive.scale(2), 
+                    width: Responsive.scale(12), 
+                    height: Responsive.scale(12), 
+                    borderRadius: BorderRadius.full, 
+                    backgroundColor: Colors.success,
                     borderWidth: 2,
-                    borderColor: 'white'
+                    borderColor: Colors.background
                   }} />
                 )}
                 
@@ -426,60 +490,60 @@ export default function MessagesScreen() {
                 {item.isGroup && (
                   <View style={{ 
                     position: 'absolute', 
-                    bottom: 2, 
-                    right: 2, 
-                    width: 12, 
-                    height: 12, 
-                    borderRadius: 6, 
-                    backgroundColor: '#8B5CF6',
+                    bottom: Responsive.verticalScale(2), 
+                    right: Responsive.scale(2), 
+                    width: Responsive.scale(12), 
+                    height: Responsive.scale(12), 
+                    borderRadius: BorderRadius.full, 
+                    backgroundColor: Colors.primary,
                     borderWidth: 2,
-                    borderColor: 'white'
+                    borderColor: Colors.background
                   }} />
                 )}
               </View>
               
               {/* Chat Info */}
               <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Responsive.verticalScale(4) }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <Text style={{ fontWeight: '700', color: '#111827', fontSize: 16, flex: 1 }}>
+                    <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: Typography.lg, flex: 1 }}>
                       {item.name}
                     </Text>
                     {item.isGroup && (
                       <View style={{ 
-                        backgroundColor: '#8B5CF6', 
-                        paddingHorizontal: 6, 
-                        paddingVertical: 2, 
-                        borderRadius: 8,
-                        marginLeft: 8
+                        backgroundColor: Colors.primary, 
+                        paddingHorizontal: Responsive.scale(6), 
+                        paddingVertical: Responsive.verticalScale(2), 
+                        borderRadius: BorderRadius.md,
+                        marginLeft: Spacing.sm
                       }}>
-                        <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>GROUP</Text>
+                        <Text style={{ color: Colors.textInverse, fontSize: Typography.xs, fontWeight: '700' }}>GROUP</Text>
                       </View>
                     )}
                   </View>
                   {item.lastMessage && (
-                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>
+                    <Text style={{ color: Colors.textTertiary, fontSize: Typography.sm }}>
                       {formatTime(item.lastMessage.timestamp)}
                     </Text>
                   )}
                 </View>
                 
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ color: '#6B7280', fontSize: 14, flex: 1 }}>
+                  <Text style={{ color: Colors.textSecondary, fontSize: Typography.base, flex: 1 }}>
                     {formatLastMessage(item.lastMessage)}
                   </Text>
                   
                   {item.unreadCount && item.unreadCount > 0 && (
                     <View style={{ 
-                      backgroundColor: '#EF4444', 
-                      borderRadius: 10, 
-                      minWidth: 20, 
-                      height: 20, 
+                      backgroundColor: Colors.error, 
+                      borderRadius: BorderRadius.lg, 
+                      minWidth: Responsive.scale(20), 
+                      height: Responsive.scale(20), 
                       justifyContent: 'center', 
                       alignItems: 'center',
-                      marginLeft: 8
+                      marginLeft: Spacing.sm
                     }}>
-                      <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>
+                      <Text style={{ color: Colors.textInverse, fontSize: Typography.sm, fontWeight: '700' }}>
                         {item.unreadCount > 99 ? '99+' : item.unreadCount}
                       </Text>
                     </View>
@@ -511,7 +575,7 @@ export default function MessagesScreen() {
           {/* Modal Header */}
           <View style={{ 
             backgroundColor: 'white', 
-            paddingTop: 50, 
+            paddingTop: 10, 
             paddingBottom: 16, 
             paddingHorizontal: 16, 
             borderBottomWidth: 1, 
