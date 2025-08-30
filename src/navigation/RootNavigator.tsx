@@ -69,6 +69,7 @@ import MessagesScreen from '../screens/MessagesScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ChatScreen from '../screens/ChatScreen';
+import GroupChatScreen from '../screens/GroupChatScreen';
 import SplashScreen from '../screens/SplashScreen';
 import { useAuthState } from '../services/auth';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -110,6 +111,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Main" component={TabsNavigator} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="GroupChat" component={GroupChatScreen} />
     </Stack.Navigator>
   );
 }

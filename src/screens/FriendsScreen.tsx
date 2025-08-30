@@ -274,7 +274,7 @@ export default function FriendsScreen() {
                   />
                 ) : (
                   <Text style={{ fontSize: 20, fontWeight: '700', color: '#6B7280' }}>
-                    {item.driverName?.charAt(0)?.toUpperCase() || 'U'}
+                    {(item.driverName?.charAt(0) || 'U').toUpperCase()}
                   </Text>
                 )}
               </View>
