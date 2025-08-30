@@ -142,6 +142,46 @@ export default function UserProfileScreen() {
     });
   };
 
+  const removeFriend = async () => {
+    if (!currentUser) return;
+    
+    Alert.alert(
+      'Remove Friend',
+      `Are you sure you want to remove ${userProfile?.driverName || userProfile?.vehicleName || 'this friend'}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const success = await PermissionsService.removeFriend(userId);
+              if (success) {
+                Alert.alert('Success', 'Friend removed successfully');
+                navigation.goBack();
+              } else {
+                Alert.alert('Error', 'Failed to remove friend. Please try again.');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Failed to remove friend');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const goToFriend = () => {
+    if (userProfile?.location) {
+      navigation.navigate('Map', { 
+        routeTo: userProfile.location,
+        friendName: userProfile?.driverName || userProfile?.vehicleName || 'Friend'
+      });
+    } else {
+      Alert.alert('Location Unavailable', 'This friend\'s location is not currently available.');
+    }
+  };
+
   const getCategoryInfo = (category: UserCategory) => {
     switch (category) {
       case 'stranger':
@@ -333,35 +373,60 @@ export default function UserProfileScreen() {
         )}
 
         {relationshipStatus === 'friend' && (
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity onPress={openChat} style={[styles.primaryButton, { flex: 1 }]}>
-              <Text style={styles.primaryButtonText}>Chat</Text>
-            </TouchableOpacity>
-            
-            {!hasPendingTrackerRequest ? (
-              <TouchableOpacity onPress={sendTrackerRequest} style={[styles.secondaryButton, { flex: 1 }]}>
-                <Text style={styles.secondaryButtonText}>Trust</Text>
+          <>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity onPress={openChat} style={[styles.primaryButton, { flex: 1 }]}>
+                <Text style={styles.primaryButtonText}>Chat</Text>
               </TouchableOpacity>
-            ) : (
-              <View style={[styles.secondaryButton, { flex: 1, backgroundColor: '#F59E0B' }]}>
-                <Text style={styles.secondaryButtonText}>Pending</Text>
-              </View>
-            )}
-          </View>
+              
+              {!hasPendingTrackerRequest ? (
+                <TouchableOpacity onPress={sendTrackerRequest} style={[styles.secondaryButton, { flex: 1 }]}>
+                  <Text style={styles.secondaryButtonText}>Trust</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={[styles.secondaryButton, { flex: 1, backgroundColor: '#F59E0B' }]}>
+                  <Text style={styles.secondaryButtonText}>Pending</Text>
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity onPress={goToFriend} style={[styles.tertiaryButton, { flex: 1 }]}>
+                <Text style={styles.tertiaryButtonText}>Go</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={removeFriend} style={[styles.dangerButton, { flex: 1 }]}>
+                <Text style={styles.dangerButtonText}>Remove Friend</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
         {relationshipStatus === 'tracker' && (
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity onPress={openChat} style={[styles.primaryButton, { flex: 1 }]}>
-              <Text style={styles.primaryButtonText}>Chat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('Map', { routeTo: userProfile.location })}
-              style={[styles.secondaryButton, { flex: 1 }]}
-            >
-              <Text style={styles.secondaryButtonText}>Track Route</Text>
-            </TouchableOpacity>
-          </View>
+          <>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity onPress={openChat} style={[styles.primaryButton, { flex: 1 }]}>
+                <Text style={styles.primaryButtonText}>Chat</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={goToFriend}
+                style={[styles.secondaryButton, { flex: 1 }]}
+              >
+                <Text style={styles.secondaryButtonText}>Go</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('Map', { routeTo: userProfile.location })}
+                style={[styles.tertiaryButton, { flex: 1 }]}
+              >
+                <Text style={styles.tertiaryButtonText}>Track Route</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={removeFriend} style={[styles.dangerButton, { flex: 1 }]}>
+                <Text style={styles.dangerButtonText}>Remove Friend</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </View>
 
@@ -668,6 +733,38 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   secondaryButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  tertiaryButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  tertiaryButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  dangerButton: {
+    backgroundColor: '#EF4444',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  dangerButtonText: {
     color: 'white',
     fontWeight: '700',
     fontSize: 16,
